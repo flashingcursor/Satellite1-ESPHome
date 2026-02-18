@@ -135,7 +135,7 @@ class PowerDelivery {
   PowerDeliveryState state{PD_STATE_DISCONNECTED};
   int contract_voltage{5};
   float contract_max_current{.5f};
-  std::string contract{"0.5A @ 5V"};
+  std::string contract{"0.5A (max) @ 5V"};
   PowerDeliveryState prev_state_{PD_STATE_DISCONNECTED};
 
   bool request_voltage(int voltage);

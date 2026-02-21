@@ -92,6 +92,7 @@ class TimeStats {
   void set_request_time(uint16_t msg_id, tv_t request_time) {
     const int64_t us = request_time.to_microseconds();
 
+    xSemaphoreTake(req_mu_, portMAX_DELAY);
     if (pending_req_send_us_.size() >= MAX_PENDING_REQ) {
       // Drop the oldest entry (simple O(n) fallback; MAX_PENDING_REQ is tiny)
       auto oldest = pending_req_send_us_.begin();
@@ -101,7 +102,6 @@ class TimeStats {
       }
       pending_req_send_us_.erase(oldest);
     }
-    xSemaphoreTake(req_mu_, portMAX_DELAY);
     pending_req_send_us_[msg_id] = us;
     xSemaphoreGive(req_mu_);
   }

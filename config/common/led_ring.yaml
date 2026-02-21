@@ -753,7 +753,7 @@ script:
       - light.turn_on:
           brightness: !lambda return min ( max( id(led_ring).current_values.get_brightness() , 0.2f ) + 0.1f , 1.0f );
           id: voice_assistant_leds
-          effect: "Timer tick"
+          effect: "Timer Tick"
 
   # Script executed when the timer is ticking, to control the LEDs
   # The LEDs shows the remaining time as a fraction of the full ring.

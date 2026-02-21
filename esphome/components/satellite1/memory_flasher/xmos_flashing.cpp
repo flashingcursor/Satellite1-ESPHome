@@ -35,6 +35,7 @@ void XMOSFlasher::loop() {
       } else if (remaining == 0) {
         this->state = FLASHER_FLASHING;
       } else if (remaining < 0) {
+        this->deinit_flashing_();
         this->state = FLASHER_ERROR_STATE;
       }
       break;
@@ -104,8 +105,7 @@ void XMOSFlasher::dump_flash_info() {
   ESP_LOGCONFIG(TAG, "	JEDEC-manufacturerID %hhu", this->manufacturerID_);
   ESP_LOGCONFIG(TAG, "	JEDEC-memoryTypeID %hhu", this->memoryTypeID_);
   ESP_LOGCONFIG(TAG, "	JEDEC-capacityID %hhu", this->capacityID_);
-  ESP_LOGCONFIG(TAG, "	JEDEC-capacityID %hhu", this->capacityID_);
-  ESP_LOGCONFIG(TAG, "	JEDEC-capacity: %hhu", 1 << this->capacityID_);
+  ESP_LOGCONFIG(TAG, "	JEDEC-capacity: %u", 1 << this->capacityID_);
 }
 
 void XMOSFlasher::erase_memory() {
@@ -181,7 +181,7 @@ bool XMOSFlasher::read_JEDECID_() {
 }
 
 bool XMOSFlasher::wait_while_flash_busy_(uint32_t timeout_ms) {
-  int32_t timeout_invoke = millis();
+  uint32_t timeout_invoke = millis();
   const uint8_t WEL = 2;
   const uint8_t BUSY = 1;
 

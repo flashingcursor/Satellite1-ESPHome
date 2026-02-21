@@ -160,7 +160,7 @@ class Satellite1 : public Component,
 
   uint32_t last_attempt_timestamp_{0};
 
-  uint8_t dc_status_register_[DC_STATUS_REGISTER::REGISTER_LEN];
+  uint8_t dc_status_register_[DC_STATUS_REGISTER::REGISTER_LEN]{0};
   bool spi_flash_direct_access_enabled_{false};
 
   GPIOPin *xmos_rst_pin_{nullptr};

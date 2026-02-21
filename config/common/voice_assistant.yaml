@@ -20,7 +20,7 @@ globals:
   - id: voice_assistant_phase
     type: int
     restore_value: no
-    # initial_value: ${voice_assist_not_ready_phase_id}
+    initial_value: ${voice_assist_not_ready_phase_id}
 
 microphone:
   - platform: satellite1
@@ -173,12 +173,6 @@ voice_assistant:
         duration: 1.0s
     # Stop the script that would potentially enable the stop word if the response is longer than a second
     - script.stop: activate_stop_word_if_tts_step_is_long
-    # Disable the stop word (If the tiemr is not ringing)
-    - if:
-        condition:
-          switch.is_off: timer_ringing
-        then:
-    # - lambda: id(stop).disable();
     # If the end happened because of an error, let the error phase on for a second
     - if:
         condition:

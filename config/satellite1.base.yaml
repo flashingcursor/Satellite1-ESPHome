@@ -142,6 +142,7 @@ memory_flasher:
         - logger.log: "success called"
         - lambda: id(xmos_flashing_state) = 2;
         - script.execute: control_leds
+        - delay: 1s
         - lambda: id(xmos_flashing_state) = 0;
         - if:
             condition:
@@ -159,6 +160,7 @@ memory_flasher:
         - logger.log: "failed called"
         - lambda: id(xmos_flashing_state) = 3;
         - script.execute: control_leds
+        - delay: 1s
         - lambda: id(xmos_flashing_state) = 0;
 
     on_erasing_done:

@@ -34,7 +34,7 @@ select:
               return index.value();
             }
             ESP_LOGI("main", "No amp level selected");
-            return 15;
+            return 8;
 
 number:
   - platform: template

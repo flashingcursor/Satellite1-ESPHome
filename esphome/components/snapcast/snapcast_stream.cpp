@@ -129,14 +129,14 @@ esp_err_t SnapcastStream::connect(std::string server, uint32_t port) {
       return ESP_FAIL;
     }
   }
-  xTaskNotify(this->stream_task_handle_, CONNECT_BIT, eSetValueWithOverwrite);
+  xTaskNotify(this->stream_task_handle_, CONNECT_BIT, eSetBits);
   return ESP_OK;
 }
 
 esp_err_t SnapcastStream::disconnect() {
   // close connection and stop all running tasks
   if (this->stream_task_handle_) {
-    xTaskNotify(this->stream_task_handle_, STOP_BIT, eSetValueWithOverwrite);
+    xTaskNotify(this->stream_task_handle_, STOP_BIT, eSetBits);
   } else {
     this->set_state_(StreamState::DESTROYED);
   }
@@ -148,12 +148,12 @@ esp_err_t SnapcastStream::start_with_notify(std::weak_ptr<esphome::TimedRingBuff
   ESP_LOGD(TAG, "Starting stream...");
   this->write_ring_buffer_ = ring_buffer;
   this->notification_target_ = notification_task;
-  xTaskNotify(this->stream_task_handle_, START_STREAM_BIT, eSetValueWithOverwrite);
+  xTaskNotify(this->stream_task_handle_, START_STREAM_BIT, eSetBits);
   return ESP_OK;
 }
 
 esp_err_t SnapcastStream::stop_streaming() {
-  xTaskNotify(this->stream_task_handle_, STOP_STREAM_BIT, eSetValueWithOverwrite);
+  xTaskNotify(this->stream_task_handle_, STOP_STREAM_BIT, eSetBits);
   return ESP_OK;
 }
 
@@ -161,7 +161,7 @@ esp_err_t SnapcastStream::report_volume(uint8_t volume, bool muted) {
   if (volume != this->volume_ || muted_ != this->muted_) {
     this->volume_ = volume;
     this->muted_ = muted;
-    xTaskNotify(this->stream_task_handle_, SEND_REPORT_BIT, eSetValueWithOverwrite);
+    xTaskNotify(this->stream_task_handle_, SEND_REPORT_BIT, eSetBits);
   }
   return ESP_OK;
 }
@@ -598,7 +598,7 @@ void SnapcastStream::stream_task_() {
 void SnapcastStream::set_state_(StreamState new_state) {
   this->state_ = new_state;
   if (this->notification_target_ != nullptr) {
-    xTaskNotify(this->notification_target_, static_cast<uint32_t>(this->state_), eSetValueWithOverwrite);
+    xTaskNotify(this->notification_target_, static_cast<uint32_t>(this->state_), eSetBits);
   }
   if (this->on_status_update_) {
     this->on_status_update_(this->state_, 255, false);  // 255 for volume means do not set
@@ -636,7 +636,11 @@ void SnapcastStream::stop_streaming_() {
 }
 
 void SnapcastStream::send_message_(SnapcastMessage *msg) {
-  assert(msg->getMessageSize() <= sizeof(tx_buffer));
+  if (msg->getMessageSize() > sizeof(tx_buffer)) {
+    ESP_LOGE(TAG, "Message size %zu exceeds tx_buffer size %zu, dropping", msg->getMessageSize(), sizeof(tx_buffer));
+    delete msg;
+    return;
+  }
   if (xQueueSend(outgoing_queue, &msg, 0) != pdPASS) {
     delete msg;  // Clean up if failed
   }

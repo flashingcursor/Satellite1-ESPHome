@@ -39,16 +39,19 @@ bool MemoryFlasher::http_get_md5_() {
   }
 
   this->md5_expected_.resize(MD5_SIZE);
-  int read_len = 0;
-  while (container->get_bytes_read() < MD5_SIZE) {
-    read_len = container->read((uint8_t *) this->md5_expected_.data(), MD5_SIZE);
+  size_t total_read = 0;
+  while (total_read < MD5_SIZE) {
+    int read_len = container->read((uint8_t *) this->md5_expected_.data() + total_read, MD5_SIZE - total_read);
+    if (read_len > 0) {
+      total_read += read_len;
+    }
     App.feed_wdt();
     yield();
   }
   container->end();
 
-  ESP_LOGV(TAG, "Read len: %u, MD5 expected: %u", read_len, MD5_SIZE);
-  return read_len == MD5_SIZE;
+  ESP_LOGV(TAG, "Total read: %u, MD5 expected: %u", total_read, MD5_SIZE);
+  return total_read == MD5_SIZE;
 }
 
 bool MemoryFlasher::validate_url_(const std::string &url) {

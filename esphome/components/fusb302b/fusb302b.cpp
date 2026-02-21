@@ -88,6 +88,7 @@ static void msg_reader_task(void *params) {
     } else if (regs.interrupta & FUSB_INTERRUPTA_I_RETRYFAIL) {
       event_info.event = PD_EVENT_SENDING_MSG_FAILED;
       ESP_LOGW(TAG, "Message did not get acknowledged");
+      xQueueSend(pd_message_queue, &event_info, 0);
     }
   }
   fusb302b->disable_auto_crc();

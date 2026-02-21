@@ -44,6 +44,8 @@ bool MemoryFlasher::http_get_md5_() {
     int read_len = container->read((uint8_t *) this->md5_expected_.data() + total_read, MD5_SIZE - total_read);
     if (read_len > 0) {
       total_read += read_len;
+    } else if (read_len <= 0) {
+      break;
     }
     App.feed_wdt();
     yield();

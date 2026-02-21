@@ -290,9 +290,9 @@ light:
               brightness_decreasing = true;
               counter = 0;
             }
-            Color error_color(0, 255, 0);
+            Color success_color(0, 255, 0);
             for (int i = 0; i < 24; i++) {
-              it[i] = error_color * uint8_t(255/brightness_step_number*(brightness_step_number-brightness_step));
+              it[i] = success_color * uint8_t(255/brightness_step_number*(brightness_step_number-brightness_step));
             }
             if (brightness_decreasing) {
               brightness_step++;

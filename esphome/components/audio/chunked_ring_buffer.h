@@ -121,7 +121,7 @@ class ChunkedRingBuffer {
 #pragma pack(push, 1)
 struct timed_chunk_t {
   tv_t stamp;       // Timestamp of the chunk
-  uint8_t data[0];  // Variable length data
+  uint8_t data[];  // Variable length data
 };
 #pragma pack(pop)
 

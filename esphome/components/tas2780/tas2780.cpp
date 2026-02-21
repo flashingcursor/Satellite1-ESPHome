@@ -346,7 +346,7 @@ void TAS2780::activate(uint8_t power_mode) {
 }
 
 void TAS2780::deactivate() {
-  ESP_LOGD(TAG, "Dectivating TAS2780");
+  ESP_LOGD(TAG, "Deactivating TAS2780");
   // set to software shutdown
   this->reg(TAS2780_MODE_CTRL) =
       (TAS2780_MODE_CTRL_BOP_SRC__PVDD_UVLO & ~TAS2780_MODE_CTRL_MODE_MASK) | TAS2780_MODE_CTRL_MODE__SFTW_SHTDWN;
@@ -454,9 +454,9 @@ void TAS2780::log_error_states() {
 }
 
 void TAS2780::loop() {
-  static uint32_t last_call = millis();
-  if (millis() - last_call > 1000) {
-    last_call = millis();
+  uint32_t now = millis();
+  if (now - this->last_loop_check_ > 1000) {
+    this->last_loop_check_ = now;
     uint8_t curr_mode = this->reg(TAS2780_MODE_CTRL).get() & 7;
     if (curr_mode == 2) {
       ESP_LOGD(TAG, "Current Mode: SOFTWARE_SHUTDOWN (PWR_MODE: %d)", this->power_mode_);

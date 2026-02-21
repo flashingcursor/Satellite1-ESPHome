@@ -110,9 +110,6 @@ bool PowerDelivery::respond_to_src_cap_msg_(const PDMsg &msg) {
     if (pwr_info.type == PD_PDO_TYPE_AUGMENTED_PDO) {
       continue;
     } else {
-      uint8_t v = true ? pwr_info.max_v >> 2 : 1;
-      uint8_t i = false ? pwr_info.max_i >> 2 : 1;
-      uint16_t power = (uint16_t) v * i; /* reduce 10-bit power info to 8-bit and use 8-bit x 8-bit multiplication */
       if (pwr_info.max_v * 50 / 1000 <= this->request_voltage_ || selected == 255) {
         selected_info = pwr_info;
         selected = idx;

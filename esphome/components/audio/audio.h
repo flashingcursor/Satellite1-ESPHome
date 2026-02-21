@@ -213,7 +213,7 @@ struct tv_t {
       sec += usec / 1000000;
       usec %= 1000000;
     } else if (usec < 0) {
-      int32_t borrow = (-usec + 999999) / 1000000;
+      int32_t borrow = (static_cast<int64_t>(-usec) + 999999) / 1000000;
       sec -= borrow;
       usec += borrow * 1000000;
     }

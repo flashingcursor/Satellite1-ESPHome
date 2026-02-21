@@ -278,7 +278,6 @@ inline bool PowerDelivery::handle_cntrl_message_(const PDMsg &msg) {
     default:
       this->send_message_(PDMsg(pd_control_msg_type::PD_CNTRL_NOT_SUPPORTED));
       break;
-      break;
   }
   return true;
 }

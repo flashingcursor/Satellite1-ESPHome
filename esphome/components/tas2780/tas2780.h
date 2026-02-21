@@ -48,6 +48,7 @@ class TAS2780 : public audio_dac::AudioDac, public Component, public i2c::I2CDev
   float vol_range_min_{.3};
   float vol_range_max_{1.};
   ChannelSelect selected_channel_{MONO_DWN_MIX};
+  uint32_t last_loop_check_{0};
 };
 
 }  // namespace tas2780

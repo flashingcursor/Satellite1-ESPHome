@@ -40,7 +40,7 @@ class FlashImageReader {
   virtual bool deinit_reader() { return true; }
 
   virtual size_t get_image_size() = 0;
-  virtual int read_image_block(uint8_t *buffer, size_t bock_size) = 0;
+  virtual int read_image_block(uint8_t *buffer, size_t block_size) = 0;
 };
 
 class HttpImageReader : public FlashImageReader {
@@ -165,8 +165,6 @@ class MemoryFlasher : public Component {
   /* flashing remote image */
   bool http_get_md5_();
   bool validate_url_(const std::string &url);
-  void cleanup_(const std::shared_ptr<http_request::HttpContainer> &container);
-
   http_request::HttpRequestComponent *http_request_;
 
   std::string md5_computed_{};

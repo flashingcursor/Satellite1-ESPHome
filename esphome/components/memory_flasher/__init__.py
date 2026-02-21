@@ -399,7 +399,7 @@ CONDITION_SCHEMA = automation.maybe_simple_id(
 )
 
 @automation.register_condition("memory_flasher.in_progress", InProgressCondition, CONDITION_SCHEMA)
-async def wifi_connected_to_code(config, condition_id, template_arg, args):
+async def in_progress_to_code(config, condition_id, template_arg, args):
     var = cg.new_Pvariable(condition_id, template_arg)
     await cg.register_parented(var, config[CONF_FLASHER_ID])
     return var

@@ -55,7 +55,7 @@ class XMOSFlasher : public MemoryFlasher, public Satellite1SPIService {
 
   bool http_flash_{false};
   bool embedded_flash_{false};
-  FlashImageReader *reader_;
+  FlashImageReader *reader_{nullptr};
   md5::MD5Digest md5_receive_;
 
   uint32_t flashing_start_time_{0};
@@ -66,8 +66,8 @@ class XMOSFlasher : public MemoryFlasher, public Satellite1SPIService {
   size_t bytes_remaining_;
   int page_pos_{0};
 
-  uint8_t *reader_buffer_;
-  uint8_t *compare_buffer_;
+  uint8_t *reader_buffer_{nullptr};
+  uint8_t *compare_buffer_{nullptr};
 };
 
 }  // namespace satellite1

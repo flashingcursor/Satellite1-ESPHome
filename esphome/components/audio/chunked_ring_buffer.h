@@ -127,8 +127,8 @@ struct timed_chunk_t {
 
 class TimedRingBuffer : public ChunkedRingBuffer {
  public:
-  TimedRingBuffer() : chunk_header_size_(sizeof(timed_chunk_t)) {}
-  TimedRingBuffer(size_t len) : ChunkedRingBuffer(len), chunk_header_size_(sizeof(timed_chunk_t)) {}
+  TimedRingBuffer() { this->chunk_header_size_ = sizeof(timed_chunk_t); }
+  TimedRingBuffer(size_t len) : ChunkedRingBuffer(len) { this->chunk_header_size_ = sizeof(timed_chunk_t); }
 
   static std::shared_ptr<TimedRingBuffer> create(size_t len);
 
@@ -143,7 +143,6 @@ class TimedRingBuffer : public ChunkedRingBuffer {
   BaseType_t reset() override;
 
  private:
-  size_t chunk_header_size_{0};
   timed_chunk_t *curr_chunk{nullptr};
 };
 

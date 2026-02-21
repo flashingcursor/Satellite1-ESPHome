@@ -125,7 +125,7 @@ class I2SAudioSpeaker : public I2SAudioOut, public speaker::Speaker, public Comp
   TaskHandle_t speaker_task_handle_{nullptr};
   EventGroupHandle_t event_group_{nullptr};
 
-  uint8_t *data_buffer_;
+  uint8_t *data_buffer_{nullptr};
   std::shared_ptr<esphome::RingBuffer> audio_ring_buffer_;
 
   uint32_t buffer_duration_ms_;
@@ -142,7 +142,7 @@ class I2SAudioSpeaker : public I2SAudioOut, public speaker::Speaker, public Comp
   size_t bytes_in_ringbuffer_{0};
   size_t in_write_buffer_{0};
   SemaphoreHandle_t lock_;
-  QueueHandle_t i2s_sent_time_queue_;
+  QueueHandle_t i2s_sent_time_queue_{nullptr};
 };
 
 }  // namespace i2s_audio

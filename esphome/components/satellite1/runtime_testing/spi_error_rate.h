@@ -14,7 +14,7 @@ const uint8_t ECHO_SERVICER_CMD_ECHO_1 = 0;
 const uint8_t ECHO_SERVICER_CMD_ECHO_64 = 1;
 const uint8_t ECHO_SERVICER_CMD_ECHO_128 = 2;
 
-class SPIErrorRate : public Component, public SatelliteSPIService {
+class SPIErrorRate : public Component, public Satellite1SPIService {
  public:
   void setup() override;
   void loop() override;

@@ -77,18 +77,18 @@ static void msg_reader_task(void *params) {
         fusb302b->read_status_register(FUSB_STATUS1, regs.status1);
       }
     }
-#if FUSB_DEBUG_PRINT
     if (regs.interrupta & FUSB_INTERRUPTA_I_HARDRST) {
       event_info.event = PD_EVENT_HARD_RESET;
-      printf(">>>FUSB_STATUS0A_HARDRST<<<\n");
+      ESP_LOGW(TAG, "Hard reset received");
+      xQueueSend(pd_message_queue, &event_info, 0);
     } else if (regs.interrupta & FUSB_INTERRUPTA_I_SOFTRST) {
-      printf(">>>SOFT_RESET_REQUEST<<<\n");
       event_info.event = PD_EVENT_SOFT_RESET;
+      ESP_LOGW(TAG, "Soft reset received");
+      xQueueSend(pd_message_queue, &event_info, 0);
     } else if (regs.interrupta & FUSB_INTERRUPTA_I_RETRYFAIL) {
       event_info.event = PD_EVENT_SENDING_MSG_FAILED;
-      printf("Message did not get acknowledged.\n");
+      ESP_LOGW(TAG, "Message did not get acknowledged");
     }
-#endif
   }
   fusb302b->disable_auto_crc();
 }
@@ -356,7 +356,7 @@ bool FUSB302B::disable_auto_crc() {
     return false;
   }
   uint8_t sw1 = this->reg(FUSB_SWITCHES1).get();
-  this->reg(FUSB_SWITCHES1) = sw1;
+  this->reg(FUSB_SWITCHES1) = sw1 & ~FUSB_SWITCHES1_AUTO_CRC;
   xSemaphoreGiveRecursive(this->i2c_lock_);
   return true;
 }
@@ -469,18 +469,12 @@ bool FUSB302B::send_message_(const PDMsg &msg) {
   *pbuf++ = (uint8_t) TX_TOKEN_TXON;
 
   int err = this->write_register(FUSB_FIFOS, buf, pbuf - buf);
-#if FUSB_DEBUG_PRINT
   if (err != i2c::ERROR_OK) {
-    printf("Sending Message (%d) failed err: %d.\n", (int) msg.type, err);
+    ESP_LOGE(TAG, "Sending Message (%d) failed err: %d.", (int) msg.type, err);
   }
-#endif
-  // else {
-  //    printf("Sent Message (%d) id: %d. [%d] \n", (int) msg.type, msg.id, millis() );
-  // }
 
-  // msg.debug_log();
   xSemaphoreGiveRecursive(this->i2c_lock_);
-  return true;
+  return err == i2c::ERROR_OK;
 }
 
 }  // namespace power_delivery

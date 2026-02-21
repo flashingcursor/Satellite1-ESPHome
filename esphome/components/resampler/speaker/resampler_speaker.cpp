@@ -97,6 +97,7 @@ void ResamplerSpeaker::loop() {
             break;
           case ESP_ERR_NO_MEM:
             this->status_set_error(LOG_STR("Failed to start resampler: not enough memory for task stack"));
+            break;
           default:
             this->status_set_error(LOG_STR("Failed to start resampler"));
             break;

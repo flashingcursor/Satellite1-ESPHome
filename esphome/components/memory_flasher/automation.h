@@ -81,9 +81,10 @@ class FlashingProgressUpdateTrigger : public Trigger<> {
  public:
   explicit FlashingProgressUpdateTrigger(MemoryFlasher *xflash) {
     xflash->add_on_state_callback([this, xflash]() {
-      if (xflash->state == FLASHER_FLASHING && xflash->flashing_progress != this->last_reported_)
+      if (xflash->state == FLASHER_FLASHING && xflash->flashing_progress != this->last_reported_) {
         this->last_reported_ = xflash->flashing_progress;
-      this->trigger();
+        this->trigger();
+      }
     });
   }
 

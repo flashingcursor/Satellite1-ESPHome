@@ -1,4 +1,4 @@
-#include "testing.h"
+#include "spi_error_rate.h"
 
 #include "esphome/core/log.h"
 

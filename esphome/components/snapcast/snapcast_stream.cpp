@@ -243,7 +243,13 @@ static void transport_task_(std::string server, uint32_t port, std::shared_ptr<C
         to_read = HEADER_SIZE - rx_buffer_length;
       } else {
         MessageHeader *msg = reinterpret_cast<MessageHeader *>(rx_buffer);
-        to_read = msg->getMessageSize() - rx_buffer_length;
+        size_t msg_size = msg->getMessageSize();
+        if (msg_size > sizeof(rx_buffer)) {
+          ESP_LOGE("transport", "Message size %zu exceeds buffer size %zu", msg_size, sizeof(rx_buffer));
+          xTaskNotify(stream_task_handle, CONNECTION_DROPPED_BIT, eSetBits);
+          break;
+        }
+        to_read = msg_size - rx_buffer_length;
       }
 
       fd_set read_fds;

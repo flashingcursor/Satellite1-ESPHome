@@ -144,6 +144,9 @@ bool Satellite1::transfer(uint8_t resource_id, uint8_t command, uint8_t *payload
 }
 
 void Satellite1::set_spi_flash_direct_access_mode(bool enable) {
+  if (this->xmos_rst_pin_ == nullptr) {
+    return;
+  }
   this->xmos_rst_pin_->digital_write(enable);
   if (enable) {
     this->state = SAT_FLASH_CONNECTED_STATE;
@@ -177,6 +180,9 @@ bool Satellite1::check_for_xmos_() {
 }
 
 void Satellite1::xmos_hardware_reset() {
+  if (this->xmos_rst_pin_ == nullptr) {
+    return;
+  }
   this->xmos_rst_pin_->digital_write(1);
   delay(100);
   this->xmos_rst_pin_->digital_write(0);

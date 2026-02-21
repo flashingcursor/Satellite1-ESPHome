@@ -136,7 +136,7 @@ AudioDecoderState AudioDecoder::decode(bool stop_gracefully) {
     // Transfer decoded out
     if (!this->pause_output_) {
       // Never shift the data in the output transfer buffer to avoid unnecessary, slow data moves
-      esp_err_t bytes_written = this->output_transfer_buffer_->transfer_data_to_sink(
+      size_t bytes_written = this->output_transfer_buffer_->transfer_data_to_sink(
           pdMS_TO_TICKS(READ_WRITE_TIMEOUT_MS * 10), skip_next_frames, false);
       if (this->output_transfer_buffer_->available()) {
         // only decode next frame, when last one has been completely written to the output

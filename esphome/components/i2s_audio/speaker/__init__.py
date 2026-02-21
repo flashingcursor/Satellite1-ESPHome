@@ -78,11 +78,11 @@ def _set_stream_limits(config):
     # Secondary mode has unmodifiable max bits per sample and min/max sample rates
     audio.set_stream_limits(
         min_bits_per_sample=8,
-        max_bits_per_sample=config.get(CONF_BITS_PER_SAMPLE),
+        max_bits_per_sample=int(config.get(CONF_BITS_PER_SAMPLE)),
         min_channels=1,
         max_channels=2,
-        min_sample_rate=config.get(CONF_SAMPLE_RATE),
-        max_sample_rate=config.get(CONF_SAMPLE_RATE),
+        min_sample_rate=int(config.get(CONF_SAMPLE_RATE)),
+        max_sample_rate=int(config.get(CONF_SAMPLE_RATE)),
     )(config)
 
     return config

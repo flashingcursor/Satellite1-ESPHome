@@ -48,7 +48,7 @@ enum class StreamState {
   STOPPING         // Requested shutdown
 };
 
-constexpr uint8_t MAX_RECONNECTIONS = 3;
+constexpr uint8_t MAX_RECONNECTIONS = 10;
 
 class SnapcastClient;
 

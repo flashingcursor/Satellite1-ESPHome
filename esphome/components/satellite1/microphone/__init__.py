@@ -70,10 +70,10 @@ def _set_num_channels_from_config(config):
 
 def _set_stream_limits(config):
     audio.set_stream_limits(
-        min_bits_per_sample=config.get(CONF_BITS_PER_SAMPLE),
-        max_bits_per_sample=config.get(CONF_BITS_PER_SAMPLE),
-        min_channels=config.get(CONF_NUM_CHANNELS),
-        max_channels=config.get(CONF_NUM_CHANNELS),
+        min_bits_per_sample=int(config.get(CONF_BITS_PER_SAMPLE)),
+        max_bits_per_sample=int(config.get(CONF_BITS_PER_SAMPLE)),
+        min_channels=int(config.get(CONF_NUM_CHANNELS)),
+        max_channels=int(config.get(CONF_NUM_CHANNELS)),
         min_sample_rate=16000,
         max_sample_rate=16000,
     )(config)

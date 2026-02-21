@@ -226,7 +226,7 @@ error_t SnapcastClient::mdns_task_() {
   mdns_result_t *results = nullptr;
 
   // PTR query: _snapcast._tcp.local
-  esp_err_t err = mdns_query_ptr("_snapcast", "_tcp", 6000, 20, &results);
+  esp_err_t err = mdns_query_ptr("_snapcast", "_tcp", 3000, 20, &results);
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "mDNS query failed: %s", esp_err_to_name(err));
     return ESP_FAIL;

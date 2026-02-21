@@ -104,10 +104,10 @@ void SnapcastControlSession::notification_loop() {
     };
     esp_transport_tcp_set_keep_alive(this->transport_, &keep_alive_config);
     // Try to connect
-    error_t err = esp_transport_connect(this->transport_, this->server_.c_str(), this->port_, -1);
+    error_t err = esp_transport_connect(this->transport_, this->server_.c_str(), this->port_, 5000);
     if (err != 0) {
       ESP_LOGE(TAG, "Connection failed with error: %d", errno);
-      vTaskDelay(pdMS_TO_TICKS(10000));
+      vTaskDelay(pdMS_TO_TICKS(2000));
       continue;
     }
 

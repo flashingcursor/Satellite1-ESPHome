@@ -56,8 +56,8 @@ esphome:
               id(dac_proxy).activate_speaker();
             }
 
-        # If after 10 minutes, the device is still initializing (It did not yet connect to Home Assistant), turn off the init_in_progress variable and run the script to refresh the LED status
-        - delay: 10min
+        # If after 5 minutes, the device is still initializing (It did not yet connect to Home Assistant), turn off the init_in_progress variable and run the script to refresh the LED status
+        - delay: 5min
         - if:
             condition:
               lambda: return id(init_in_progress);

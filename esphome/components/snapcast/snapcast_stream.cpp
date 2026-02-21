@@ -19,6 +19,8 @@
 #include "snapcast_stream.h"
 #include "messages.h"
 
+#include <algorithm>
+
 #include "esphome/core/log.h"
 
 extern "C" {
@@ -206,7 +208,7 @@ static void transport_task_(std::string server, uint32_t port, std::shared_ptr<C
     setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
     setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &one, sizeof(one));
 #ifdef TCP_KEEPIDLE
-    int idle = 30, intvl = 5, cnt = 3;
+    int idle = 10, intvl = 5, cnt = 3;
     setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(idle));
     setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &intvl, sizeof(intvl));
     setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, &cnt, sizeof(cnt));
@@ -572,7 +574,8 @@ void SnapcastStream::stream_task_() {
       if (notify_value & CONNECTION_FAILED_BIT || notify_value & CONNECTION_DROPPED_BIT) {
         if (this->reconnect_on_error_()) {
           this->set_state_(StreamState::RECONNECTING);
-          vTaskDelay(pdMS_TO_TICKS(1000));
+          uint32_t backoff_ms = 1000u << std::min(this->reconnect_counter_ - 1, uint32_t(4));
+          vTaskDelay(pdMS_TO_TICKS(backoff_ms));
           xTaskNotify(transport_task_handle, CONNECT_BIT, eSetBits);
         } else {
           this->error_msg_ = "Failed to connect or connection dropped";

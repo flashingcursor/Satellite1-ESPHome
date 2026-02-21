@@ -82,7 +82,7 @@ class SnapcastClient : public Component {
   error_t start_mdns_scan_();
   error_t mdns_task_();
   TaskHandle_t mdns_task_handle_{nullptr};
-  uint32_t mdns_scan_interval_ms_{30000};
+  uint32_t mdns_scan_interval_ms_{10000};
   uint32_t mdns_last_scan_{0};
   std::string found_ip_;
 

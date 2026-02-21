@@ -59,7 +59,7 @@ template<typename... Ts> class IsConnectedCondition : public Condition<Ts...>, p
   bool check(const Ts &...x) override {
     return this->parent_->state == PowerDeliveryState::PD_STATE_DEFAULT_CONTRACT ||
            this->parent_->state == PowerDeliveryState::PD_STATE_EXPLICIT_SPR_CONTRACT ||
-           PowerDeliveryState::PD_STATE_EXPLICIT_EPR_CONTRACT;
+           this->parent_->state == PowerDeliveryState::PD_STATE_EXPLICIT_EPR_CONTRACT;
   }
 };
 

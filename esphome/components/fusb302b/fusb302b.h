@@ -63,14 +63,15 @@ class FUSB302B : public PowerDelivery, public Component, protected i2c::I2CDevic
 
   int irq_pin_{0};
 
+ public:
+  SemaphoreHandle_t i2c_lock_;
+
  protected:
   void publish_() override {
     this->defer([this]() { this->state_callback_.call(); });
   }
 
   bool init_fusb_settings_();
-
-  SemaphoreHandle_t i2c_lock_;
 };
 
 }  // namespace power_delivery

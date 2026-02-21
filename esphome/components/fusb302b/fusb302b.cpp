@@ -124,25 +124,21 @@ static void trigger_task(void *params) {
     if (xQueueReceive(pd_message_queue, &event_info, portMAX_DELAY) == pdTRUE) {
       // delay needed for getting fusb302b ready for receiving i2c again, is this the right place though?
       // vTaskDelay(pdMS_TO_TICKS(1));
-      void taskENTER_CRITICAL(void);
+      xSemaphoreTakeRecursive(fusb302b->i2c_lock_, portMAX_DELAY);
       PDMsg &msg = event_info.msg;
-      // printf( "PD-Received new message with id: %d (%d, %d) [%u].\n", msg.id, msg.type, msg.num_of_obj, millis());
       fusb302b->handle_message_(msg);
-      void taskEXIT_CRITICAL(void);
+      xSemaphoreGiveRecursive(fusb302b->i2c_lock_);
     }
   }
 }
 
 void FUSB302B::setup() {
-  this->i2c_lock_ = xSemaphoreCreateBinary();
+  this->i2c_lock_ = xSemaphoreCreateRecursiveMutex();
   if (this->i2c_lock_ == NULL) {
-    ESP_LOGD(TAG, "Failed to create semaphore.");
+    ESP_LOGD(TAG, "Failed to create mutex.");
     this->mark_failed();
     return;
   }
-
-  // Release the semaphore initially
-  xSemaphoreGive(this->i2c_lock_);
 
   if (this->check_chip_id()) {
     ESP_LOGD(TAG, "FUSB302 found, initializing...");
@@ -223,7 +219,7 @@ bool FUSB302B::cc_line_selection_() {
 }
 
 void FUSB302B::fusb_reset_() {
-  if (xSemaphoreTake(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
+  if (xSemaphoreTakeRecursive(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
     return;
   }
   /* Flush the TX buffer */
@@ -235,18 +231,18 @@ void FUSB302B::fusb_reset_() {
   /* Reset the PD logic */
   this->reg(FUSB_RESET) = FUSB_RESET_PD_RESET;
 
-  xSemaphoreGive(this->i2c_lock_);
+  xSemaphoreGiveRecursive(this->i2c_lock_);
   this->last_received_msg_id_ = 255;
   PDMsg::msg_cnter_ = 0;
   return;
 }
 
 bool FUSB302B::read_status(fusb_status &status) {
-  if (xSemaphoreTake(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
+  if (xSemaphoreTakeRecursive(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
     return false;
   }
   int err = this->read_register(FUSB_STATUS0A, status.bytes, 7);
-  xSemaphoreGive(this->i2c_lock_);
+  xSemaphoreGiveRecursive(this->i2c_lock_);
   return err == 0;
 }
 
@@ -257,14 +253,14 @@ void FUSB302B::check_status_() {
         return;
       }
 
-      if (xSemaphoreTake(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
+      if (xSemaphoreTakeRecursive(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
         return;
       }
       /* enable internal oscillator */
       this->reg(FUSB_POWER) = PWR_BANDGAP | PWR_RECEIVER | PWR_MEASURE | PWR_INT_OSC;
 
       bool connected = this->cc_line_selection_();
-      xSemaphoreGive(this->i2c_lock_);
+      xSemaphoreGiveRecursive(this->i2c_lock_);
 
       if (!connected) {
         this->state_ = FUSB302_STATE_FAILED;
@@ -336,46 +332,46 @@ void FUSB302B::check_status_() {
 }
 
 bool FUSB302B::check_chip_id() {
-  if (xSemaphoreTake(this->i2c_lock_, pdMS_TO_TICKS(1000)) != pdTRUE) {
+  if (xSemaphoreTakeRecursive(this->i2c_lock_, pdMS_TO_TICKS(1000)) != pdTRUE) {
     return false;
   }
   uint8_t dev_id = this->reg(FUSB_DEVICE_ID).get();
-  xSemaphoreGive(this->i2c_lock_);
+  xSemaphoreGiveRecursive(this->i2c_lock_);
   ESP_LOGD(TAG, "reported device id: %d", dev_id);
   return (dev_id == 0x81) || (dev_id == 0x91);
 }
 
 bool FUSB302B::enable_auto_crc() {
-  if (xSemaphoreTake(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
+  if (xSemaphoreTakeRecursive(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
     return false;
   }
   uint8_t sw1 = this->reg(FUSB_SWITCHES1).get();
   this->reg(FUSB_SWITCHES1) = sw1 | FUSB_SWITCHES1_AUTO_CRC;
-  xSemaphoreGive(this->i2c_lock_);
+  xSemaphoreGiveRecursive(this->i2c_lock_);
   return true;
 }
 
 bool FUSB302B::disable_auto_crc() {
-  if (xSemaphoreTake(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
+  if (xSemaphoreTakeRecursive(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
     return false;
   }
   uint8_t sw1 = this->reg(FUSB_SWITCHES1).get();
   this->reg(FUSB_SWITCHES1) = sw1;
-  xSemaphoreGive(this->i2c_lock_);
+  xSemaphoreGiveRecursive(this->i2c_lock_);
   return true;
 }
 
 bool FUSB302B::read_status_register(uint8_t reg, uint8_t &value) {
-  if (xSemaphoreTake(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
+  if (xSemaphoreTakeRecursive(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
     return false;
   }
   int err = this->read_register(reg, &value, 1);
-  xSemaphoreGive(this->i2c_lock_);
+  xSemaphoreGiveRecursive(this->i2c_lock_);
   return err == 0;
 }
 
 bool FUSB302B::init_fusb_settings_() {
-  if (xSemaphoreTake(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
+  if (xSemaphoreTakeRecursive(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
     return false;
   }
 
@@ -403,12 +399,12 @@ bool FUSB302B::init_fusb_settings_() {
 
   this->reg(FUSB_POWER) = 0x0F;
   this->fusb_reset_();
-  xSemaphoreGive(this->i2c_lock_);
+  xSemaphoreGiveRecursive(this->i2c_lock_);
   return true;
 }
 
 bool FUSB302B::read_message_(PDMsg &msg) {
-  if (xSemaphoreTake(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
+  if (xSemaphoreTakeRecursive(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
     return false;
   }
 
@@ -424,7 +420,7 @@ bool FUSB302B::read_message_(PDMsg &msg) {
   msg.set_header(header);
 
   if (msg.num_of_obj > 7) {
-    xSemaphoreGive(this->i2c_lock_);
+    xSemaphoreGiveRecursive(this->i2c_lock_);
     return false;
   } else if (msg.num_of_obj > 0) {
     ret |= this->read_register(FUSB_FIFOS, (uint8_t *) msg.data_objects, msg.num_of_obj * sizeof(uint32_t));
@@ -434,12 +430,12 @@ bool FUSB302B::read_message_(PDMsg &msg) {
   uint8_t dummy[4];
   ret |= this->read_register(FUSB_FIFOS, dummy, 4);
 
-  xSemaphoreGive(this->i2c_lock_);
+  xSemaphoreGiveRecursive(this->i2c_lock_);
   return (ret == 0);
 }
 
 bool FUSB302B::send_message_(const PDMsg &msg) {
-  if (xSemaphoreTake(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
+  if (xSemaphoreTakeRecursive(this->i2c_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
     return false;
   }
 
@@ -483,7 +479,7 @@ bool FUSB302B::send_message_(const PDMsg &msg) {
   // }
 
   // msg.debug_log();
-  xSemaphoreGive(this->i2c_lock_);
+  xSemaphoreGiveRecursive(this->i2c_lock_);
   return true;
 }
 

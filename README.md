@@ -110,8 +110,6 @@ The Satellite1 is a two-processor system: the ESP32-S3 (this firmware) handles W
 
 The firmware is built as a set of custom ESPHome components (`esphome/components/`) with modular YAML configuration (`config/common/`). Key components include `satellite1` (SPI protocol to XMOS), `i2s_audio` (48kHz audio I/O), `micro_wake_word` (on-device wake word), `fusb302b` (USB-C PD negotiation), `tas2780`/`pcm5122` (speaker/line-out DACs), and `mixer`/`resampler` (audio stream processing).
 
-See [CLAUDE.md](CLAUDE.md) for detailed architectural notes.
-
 ## Relationship to Upstream
 
 This is an independent experimental fork. The original project by [FutureProofHomes](https://github.com/FutureProofHomes) is where you should go for official releases, documentation, and support:

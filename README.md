@@ -27,6 +27,44 @@ All features are controllable via Home Assistant config entities:
 
 Several rounds of bug fixes across the component codebase, covering critical audio pipeline issues, power delivery negotiation, network resilience, and general correctness.
 
+## Installing Pre-built Firmware
+
+Download the latest firmware from the [Releases page](../../releases).
+
+### Which file do I need?
+
+| File | Description |
+|------|-------------|
+| `satellite1.factory.bin` | Base firmware (no mmWave radar) |
+| `satellite1.ld2410.factory.bin` | With HLK-LD2410 mmWave radar support |
+| `satellite1.ld2450.factory.bin` | With HLK-LD2450 mmWave radar support |
+
+Use the `.factory.bin` files for first-time USB flashing. Use the `.ota.bin` files for over-the-air updates.
+
+### First-time flash via USB
+
+**Option A: Browser-based (easiest)**
+
+1. Go to [web.esphome.io](https://web.esphome.io)
+2. Connect the Satellite1 to your computer via USB
+3. Click **Connect**, select the serial port
+4. Click **Install**, then select the downloaded `.factory.bin` file
+
+**Option B: Command line**
+
+```bash
+pip install esptool
+esptool.py write_flash 0x0 satellite1.factory.bin
+```
+
+### OTA updates
+
+Once the device is running and connected to your network, flash `.ota.bin` files through the ESPHome dashboard in Home Assistant or via the ESPHome CLI:
+
+```bash
+esphome upload config/satellite1.yaml
+```
+
 ## Hardware
 
 You need a [FutureProofHomes Core Board](https://futureproofhomes.net/products/satellite1-core-board) (ESP32-S3 with PSRAM, 16MB flash). The [HAT board](https://futureproofhomes.net/products/satellite1-top-microphone-board) is strongly recommended to unlock microphone array, wake word, sensors, and LED ring features.
@@ -53,6 +91,10 @@ Hardware variant configs for mmWave radar:
 esphome compile config/satellite1.ld2410.yaml
 esphome compile config/satellite1.ld2450.yaml
 ```
+
+### Creating a Release
+
+Releases are built via GitHub Actions. Go to **Actions > Build and Release Firmware**, click **Run workflow**, and enter a version tag (e.g. `v0.1.0`). The workflow builds all three configs and creates a GitHub Release with the firmware binaries.
 
 ### Linting
 

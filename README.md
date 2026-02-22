@@ -8,7 +8,7 @@ This is a fork of [FutureProofHomes/Satellite1-ESPHome](https://github.com/Futur
 
 ### Connectivity UX
 
-The stock firmware goes silent when Home Assistant or WiFi disconnects -- wake word detection stops, no audio feedback, the user has no idea what happened. This fork makes the device behave more like a Google Home:
+The stock firmware goes silent when Home Assistant or WiFi disconnects -- wake word detection stops, no audio feedback, the user has no idea what happened. We taught it some manners:
 
 - **Always-listening mode** -- Wake word detection stays active during HA outages. Say the wake word and the device tells you what's wrong instead of ignoring you.
 - **Spoken status updates** -- "I'm back online" when HA reconnects, "WiFi reconnected" when WiFi restores. Configurable as voice clips or sci-fi tones.

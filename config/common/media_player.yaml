@@ -239,6 +239,24 @@ media_player:
         file: https://github.com/esphome/home-assistant-voice-pe/raw/dev/sounds/jack_connected.flac
       - id: jack_disconnected_sound
         file: https://github.com/esphome/home-assistant-voice-pe/raw/dev/sounds/jack_disconnected.flac
+      - id: ha_unavailable_voice_sound
+        file: ../assets/sounds/ha_unavailable_voice.flac
+      - id: ha_unavailable_tone_sound
+        file: ../assets/sounds/ha_unavailable_tone.flac
+      - id: connection_restored_voice_sound
+        file: ../assets/sounds/connection_restored_voice.flac
+      - id: connection_restored_tone_sound
+        file: ../assets/sounds/connection_restored_tone.flac
+      - id: wifi_reconnected_voice_sound
+        file: ../assets/sounds/wifi_reconnected_voice.flac
+      - id: wifi_reconnected_tone_sound
+        file: ../assets/sounds/wifi_reconnected_tone.flac
+      - id: wifi_setup_voice_sound
+        file: ../assets/sounds/wifi_setup_voice.flac
+      - id: wifi_lost_voice_sound
+        file: ../assets/sounds/wifi_lost_voice.flac
+      - id: wifi_not_available_voice_sound
+        file: ../assets/sounds/wifi_not_available_voice.flac
 
 script:
   # Script executed when we want to play sounds on the device.

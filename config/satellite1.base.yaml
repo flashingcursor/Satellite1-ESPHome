@@ -26,6 +26,16 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
+  # Global variable tracking if WiFi was previously disconnected (for reconnection announcements)
+  - id: was_wifi_disconnected
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  # Global variable tracking if HA was previously disconnected (for reconnection announcements)
+  - id: was_ha_disconnected
+    type: bool
+    restore_value: no
+    initial_value: 'false'
   # Global variable tracking the XMOS flasher status.
   - id: xmos_flashing_state
     type: int
@@ -55,6 +65,25 @@ esphome:
             if( !id(line_out_sensor).state && id(dac_proxy).active_dac == 1){
               id(dac_proxy).activate_speaker();
             }
+
+        # First-time WiFi setup prompt: if WiFi hasn't connected after 10s grace period, play setup guidance
+        - delay: 10s
+        - if:
+            condition:
+              and:
+                - lambda: return id(init_in_progress);
+                - not:
+                    wifi.connected:
+                - lambda: return !id(was_wifi_disconnected);
+            then:
+              - script.execute:
+                  id: play_sound
+                  priority: true
+                  sound_file: !lambda |-
+                    if (id(announce_mode_select).active_index().value_or(0) == 0) {
+                      return id(wifi_setup_voice_sound);
+                    }
+                    return id(ha_unavailable_tone_sound);
 
         # If after 5 minutes, the device is still initializing (It did not yet connect to Home Assistant), turn off the init_in_progress variable and run the script to refresh the LED status
         - delay: 5min

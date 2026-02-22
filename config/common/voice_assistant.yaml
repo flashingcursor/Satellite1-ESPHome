@@ -55,40 +55,76 @@ micro_wake_word:
         condition:
           switch.is_off: master_mute_switch
         then:
-          # If a timer is ringing: Stop it, do not start the voice assistant (We can stop timer from voice!)
+          # If WiFi is down and always-listen is enabled: play WiFi unavailable sound
           - if:
               condition:
-                switch.is_on: timer_ringing
+                and:
+                  - not:
+                      wifi.connected:
+                  - switch.is_on: always_listen_switch
               then:
-                - switch.turn_off: timer_ringing
-              # Stop voice assistant if running
+                - script.execute:
+                    id: play_sound
+                    priority: true
+                    sound_file: !lambda |-
+                      if (id(announce_mode_select).active_index().value_or(0) == 0) {
+                        return id(wifi_not_available_voice_sound);
+                      }
+                      return id(ha_unavailable_tone_sound);
+                - script.stop: wifi_lost_prompt
               else:
+                # If HA is not connected (but WiFi is up) and always-listen is enabled: play HA unavailable sound
                 - if:
                     condition:
-                      voice_assistant.is_running:
+                      and:
+                        - not:
+                            api.connected:
+                        - switch.is_on: always_listen_switch
                     then:
-                      voice_assistant.stop:
-                    # Stop any other media player announcement
+                      - script.execute:
+                          id: play_sound
+                          priority: true
+                          sound_file: !lambda |-
+                            if (id(announce_mode_select).active_index().value_or(0) == 0) {
+                              return id(ha_unavailable_voice_sound);
+                            }
+                            return id(ha_unavailable_tone_sound);
+                      - script.execute: ha_reconnect_retry
                     else:
+                      # If a timer is ringing: Stop it, do not start the voice assistant (We can stop timer from voice!)
                       - if:
                           condition:
-                            media_player.is_announcing:
+                            switch.is_on: timer_ringing
                           then:
-                            - media_player.stop:
-                                announcement: true
-                          # Start the voice assistant and play the wake sound, if enabled
+                            - switch.turn_off: timer_ringing
+                          # Stop voice assistant if running
                           else:
                             - if:
                                 condition:
-                                  switch.is_on: wake_sound
+                                  voice_assistant.is_running:
                                 then:
-                                  - script.execute:
-                                      id: play_sound
-                                      priority: true
-                                      sound_file: !lambda return id(wake_word_triggered_sound);
-                                  - delay: 300ms
-                            - voice_assistant.start:
-                                wake_word: !lambda return wake_word;
+                                  voice_assistant.stop:
+                                # Stop any other media player announcement
+                                else:
+                                  - if:
+                                      condition:
+                                        media_player.is_announcing:
+                                      then:
+                                        - media_player.stop:
+                                            announcement: true
+                                      # Start the voice assistant and play the wake sound, if enabled
+                                      else:
+                                        - if:
+                                            condition:
+                                              switch.is_on: wake_sound
+                                            then:
+                                              - script.execute:
+                                                  id: play_sound
+                                                  priority: true
+                                                  sound_file: !lambda return id(wake_word_triggered_sound);
+                                              - delay: 300ms
+                                        - voice_assistant.start:
+                                            wake_word: !lambda return wake_word;
 
 voice_assistant:
   id: va
@@ -107,9 +143,32 @@ voice_assistant:
     - micro_wake_word.start:
     - lambda: id(voice_assistant_phase) = ${voice_assist_idle_phase_id};
     - script.execute: control_leds
+    - if:
+        condition:
+          and:
+            - lambda: return id(was_ha_disconnected);
+            - switch.is_on: announce_connection_switch
+            - lambda: return !id(improv_ble_in_progress);
+        then:
+          - script.execute:
+              id: play_sound
+              priority: false
+              sound_file: !lambda |-
+                if (id(announce_mode_select).active_index().value_or(0) == 0) {
+                  return id(connection_restored_voice_sound);
+                }
+                return id(connection_restored_tone_sound);
+    - lambda: id(was_ha_disconnected) = false;
   on_client_disconnected:
     - voice_assistant.stop:
-    - lambda: id(voice_assistant_phase) = ${voice_assist_not_ready_phase_id};
+    - lambda: |-
+        id(voice_assistant_phase) = ${voice_assist_not_ready_phase_id};
+        id(was_ha_disconnected) = true;
+    - if:
+        condition:
+          switch.is_on: always_listen_switch
+        then:
+          - micro_wake_word.start:
     - script.execute: control_leds
   on_error:
     - if:
@@ -195,6 +254,21 @@ voice_assistant:
     - script.execute: control_leds
 
 script:
+  # Script to retry HA connection after wake word detected during disconnection.
+  # Waits up to 30s for HA to reconnect, then auto-starts voice assistant if it does.
+  - id: ha_reconnect_retry
+    mode: restart
+    then:
+      - wait_until:
+          condition:
+            api.connected:
+          timeout: 30s
+      - if:
+          condition:
+            api.connected:
+          then:
+            - voice_assistant.start:
+
   # Script used activate the stop word if the TTS step is long.
   # Why is this wrapped on a script?
   #   Becasue we want to stop the sequence if the TTS step is faster than that.
@@ -223,7 +297,36 @@ script:
                 then:
                   - micro_wake_word.disable_model: stop
 
+switch:
+  - platform: template
+    id: always_listen_switch
+    name: "Always listen"
+    icon: "mdi:ear-hearing"
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+
+  - platform: template
+    id: announce_connection_switch
+    name: "Announce connections"
+    icon: "mdi:bullhorn"
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+
 select:
+  - platform: template
+    id: announce_mode_select
+    name: "Announcement style"
+    icon: "mdi:volume-medium"
+    entity_category: config
+    optimistic: true
+    initial_option: "Voice"
+    restore_value: true
+    options:
+      - "Voice"
+      - "Tones"
+
   - platform: template
     id: mww_sensitivity_select
     name: "Wake word sensitivity"

@@ -9,8 +9,47 @@ wifi:
   on_connect:
     - lambda: id(improv_ble_in_progress) = false;
     - script.execute: control_leds
+    - if:
+        condition:
+          and:
+            - lambda: return id(was_wifi_disconnected);
+            - switch.is_on: announce_connection_switch
+            - lambda: return !id(improv_ble_in_progress);
+        then:
+          - script.execute:
+              id: play_sound
+              priority: false
+              sound_file: !lambda |-
+                if (id(announce_mode_select).active_index().value_or(0) == 0) {
+                  return id(wifi_reconnected_voice_sound);
+                }
+                return id(wifi_reconnected_tone_sound);
+    - lambda: id(was_wifi_disconnected) = false;
+    - script.stop: wifi_lost_prompt
   on_disconnect:
+    - lambda: id(was_wifi_disconnected) = true;
     - script.execute: control_leds
+    - script.execute: wifi_lost_prompt
 
 improv_serial:
+
+script:
+  # Proactive WiFi guidance: plays a prompt 30s after WiFi disconnects if still not connected
+  - id: wifi_lost_prompt
+    mode: restart
+    then:
+      - delay: 30s
+      - if:
+          condition:
+            not:
+              wifi.connected:
+          then:
+            - script.execute:
+                id: play_sound
+                priority: true
+                sound_file: !lambda |-
+                  if (id(announce_mode_select).active_index().value_or(0) == 0) {
+                    return id(wifi_lost_voice_sound);
+                  }
+                  return id(ha_unavailable_tone_sound);
 

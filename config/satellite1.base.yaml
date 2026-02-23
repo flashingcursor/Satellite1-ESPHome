@@ -8,7 +8,7 @@ substitutions:
 
   # Recommend leaving the following unchanged
   node_name: satellite1
-  company_name: FutureProofHomes
+  company_name: flashingcursor
   project_name: Satellite1
   component_name: Core
 
@@ -99,7 +99,7 @@ ota:
     id: ota_esphome
 
 dashboard_import:
-  package_import_url: github://futureproofhomes/satellite1-esphome/config/satellite1.dashboard.yaml@staging
+  package_import_url: github://flashingcursor/Satellite1-ESPHome/config/satellite1.dashboard.yaml@develop
   import_full_config: true
 
 packages:

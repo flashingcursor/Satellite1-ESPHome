@@ -60,7 +60,7 @@ jobs:
         id: prerelease
         run: |
           version="${{ inputs.version }}"
-          if echo "$version" | grep -qE '-(alpha|beta|rc|dev)'; then
+          if [[ "$version" =~ -(alpha|beta|rc|dev) ]]; then
             echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
@@ -95,7 +95,7 @@ jobs:
         id: prerelease
         run: |
           version="${{ inputs.version }}"
-          if echo "$version" | grep -qE '-(alpha|beta|rc|dev)'; then
+          if [[ "$version" =~ -(alpha|beta|rc|dev) ]]; then
             echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_prerelease=false" >> "$GITHUB_OUTPUT"

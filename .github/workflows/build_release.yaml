@@ -56,11 +56,127 @@ jobs:
           find files -name "*.bin" -exec cp {} build/ \;
           find files -name "*.elf" -exec cp {} build/ \;
 
+      - name: Detect prerelease
+        id: prerelease
+        run: |
+          version="${{ inputs.version }}"
+          if echo "$version" | grep -qE '-(alpha|beta|rc|dev)'; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.version }}
           generate_release_notes: true
+          prerelease: ${{ steps.prerelease.outputs.is_prerelease == 'true' }}
           files: |
             build/*.bin
             build/*.elf
+
+  publish-manifests:
+    name: Publish OTA Manifests
+    needs: [build-firmware, release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Detect prerelease
+        id: prerelease
+        run: |
+          version="${{ inputs.version }}"
+          if echo "$version" | grep -qE '-(alpha|beta|rc|dev)'; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate manifest files
+        run: |
+          version="${{ inputs.version }}"
+          repo="flashingcursor/Satellite1-ESPHome"
+          is_prerelease="${{ steps.prerelease.outputs.is_prerelease }}"
+
+          # Map: config basename -> manifest filename suffix
+          declare -A VARIANT_MAP
+          VARIANT_MAP["satellite1"]=""
+          VARIANT_MAP["satellite1.ld2410"]=".ld2410"
+          VARIANT_MAP["satellite1.ld2450"]=".ld2450"
+
+          for basename in satellite1 satellite1.ld2410 satellite1.ld2450; do
+            suffix="${VARIANT_MAP[$basename]}"
+
+            # Find the ESPHome-generated manifest for this variant
+            src_manifest=$(find artifacts -path "*${basename}.yaml-*/manifest.json" | head -1)
+            if [ -z "$src_manifest" ]; then
+              echo "ERROR: No manifest found for ${basename}"
+              exit 1
+            fi
+
+            # Extract MD5 from ESPHome-generated manifest
+            md5=$(jq -r '.builds[0].ota.md5' "$src_manifest")
+            if [ -z "$md5" ] || [ "$md5" = "null" ]; then
+              echo "ERROR: No MD5 found in manifest for ${basename}"
+              exit 1
+            fi
+
+            # Determine output filename
+            if [ "$is_prerelease" = "true" ]; then
+              out_file="manifest-beta${suffix}.json"
+            else
+              out_file="manifest${suffix}.json"
+            fi
+
+            # Generate manifest with absolute URLs to GitHub Release assets
+            jq -n \
+              --arg version "$version" \
+              --arg ota_path "https://github.com/${repo}/releases/download/${version}/${basename}.ota.bin" \
+              --arg md5 "$md5" \
+              --arg summary "$version" \
+              --arg release_url "https://github.com/${repo}/releases/tag/${version}" \
+              --arg factory_path "https://github.com/${repo}/releases/download/${version}/${basename}.factory.bin" \
+              '{
+                name: "flashingcursor.Satellite1",
+                version: $version,
+                home_assistant_domain: "esphome",
+                new_install_prompt_erase: false,
+                builds: [{
+                  chipFamily: "ESP32-S3",
+                  ota: {
+                    path: $ota_path,
+                    md5: $md5,
+                    summary: $summary,
+                    release_url: $release_url
+                  },
+                  parts: [{
+                    path: $factory_path,
+                    offset: 0
+                  }]
+                }]
+              }' > "$out_file"
+
+            echo "Generated ${out_file} (md5: ${md5})"
+          done
+
+      - name: Commit manifests to main
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add manifest*.json
+          if git diff --cached --quiet; then
+            echo "No manifest changes to commit"
+          else
+            git commit -m "update OTA manifests for ${{ inputs.version }}"
+            git push origin main
+          fi

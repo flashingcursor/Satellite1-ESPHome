@@ -103,7 +103,23 @@ micro_wake_word:
                                 condition:
                                   voice_assistant.is_running:
                                 then:
-                                  voice_assistant.stop:
+                                  # Stop word: just cancel (existing behavior)
+                                  - if:
+                                      condition:
+                                        lambda: 'return wake_word == "stop";'
+                                      then:
+                                        - voice_assistant.stop:
+                                      else:
+                                        # Barge-in: cancel TTS and start new session
+                                        - voice_assistant.stop:
+                                        - media_player.stop:
+                                            announcement: true
+                                        - wait_until:
+                                            not:
+                                              voice_assistant.is_running:
+                                        - delay: 250ms
+                                        - voice_assistant.start:
+                                            wake_word: !lambda return wake_word;
                                 # Stop any other media player announcement
                                 else:
                                   - if:

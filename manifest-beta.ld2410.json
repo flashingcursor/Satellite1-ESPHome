@@ -8,7 +8,7 @@
       "chipFamily": "ESP32-S3",
       "ota": {
         "path": "https://github.com/flashingcursor/Satellite1-ESPHome/releases/download/v0.1.5-beta.7/satellite1.ld2410.ota.bin",
-        "md5": "eaf5790dbe94568017b7e6a31009b7ea",
+        "md5": "838b4ccd35220e3f8265fb5c95add9c4",
         "summary": "v0.1.5-beta.7",
         "release_url": "https://github.com/flashingcursor/Satellite1-ESPHome/releases/tag/v0.1.5-beta.7"
       },

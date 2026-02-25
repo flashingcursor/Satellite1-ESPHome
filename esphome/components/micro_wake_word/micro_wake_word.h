@@ -144,4 +144,8 @@ class MicroWakeWord : public Component
 }  // namespace micro_wake_word
 }  // namespace esphome
 
+// Included here so the inline helpers are visible to YAML lambdas
+// (micro_wake_word.h is transitively included by the generated code)
+#include "custom_mww_helper.h"
+
 #endif  // USE_ESP32

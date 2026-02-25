@@ -1,7 +1,3 @@
-esphome:
-  includes:
-    - common/custom_mww_helper.h
-
 text:
   - platform: template
     id: custom_mww_url

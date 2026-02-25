@@ -67,7 +67,7 @@ esp32_improv:
     - script.execute: control_leds
 
 http_request:
-  buffer_size_rx: 4096
+  buffer_size_rx: 8192
 
 ota:
   - platform: http_request

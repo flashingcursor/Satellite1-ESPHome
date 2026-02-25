@@ -11,15 +11,15 @@ text:
 
 button:
   - platform: template
-    name: "Install custom wake word"
-    icon: "mdi:download"
+    name: "Custom wake word install"
+    icon: "mdi:microphone-settings"
     entity_category: config
     on_press:
       - script.execute: download_custom_wake_word
 
   - platform: template
-    name: "Remove custom wake word"
-    icon: "mdi:delete"
+    name: "Custom wake word remove"
+    icon: "mdi:microphone-off"
     entity_category: config
     on_press:
       - script.execute: remove_custom_wake_word
@@ -28,8 +28,8 @@ text_sensor:
   - platform: template
     id: custom_mww_status
     name: "Custom wake word status"
-    icon: "mdi:information"
-    entity_category: diagnostic
+    icon: "mdi:microphone-message"
+    entity_category: config
     update_interval: never
     lambda: |-
       std::string name = custom_mww::get_installed_name();

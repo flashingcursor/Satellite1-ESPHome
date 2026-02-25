@@ -53,6 +53,7 @@ class MicroWakeWord : public Component
   bool is_running() const { return this->state_ != State::STOPPED; }
 
   void set_features_step_size(uint8_t step_size) { this->features_step_size_ = step_size; }
+  uint8_t get_features_step_size() const { return this->features_step_size_; }
 
   void set_microphone_source(microphone::MicrophoneSource *microphone_source) {
     this->microphone_source_ = microphone_source;
@@ -127,6 +128,9 @@ class MicroWakeWord : public Component
   /// @brief Processes any new probabilities for each model. If any wake word is detected, it will send a DetectionEvent
   /// to the detection_queue_.
   void process_probabilities_();
+
+  /// @brief Loads a user-provided wake word model from NVS flash, if one exists
+  void load_user_model_from_nvs_();
 
   /// @brief Deletes each model's TFLite interpreters and frees tensor arena memory.
   void unload_models_();

@@ -5,6 +5,8 @@
 #include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
+#include <esp_heap_caps.h>
+
 static const char *const TAG = "micro_wake_word";
 
 namespace esphome {
@@ -230,6 +232,19 @@ DetectionEvent WakeWordModel::determine_detected() {
 
   this->unprocessed_probability_status_ = false;
   return detection_event;
+}
+
+UserWakeWordModel::UserWakeWordModel(uint8_t *model_data, size_t model_size, uint8_t probability_cutoff,
+                                     size_t sliding_window_size, const std::string &wake_word, size_t tensor_arena_size)
+    : WakeWordModel("user_custom", model_data, probability_cutoff, sliding_window_size, wake_word, tensor_arena_size,
+                    true, false),
+      owned_model_data_size_(model_size) {}
+
+UserWakeWordModel::~UserWakeWordModel() {
+  if (this->model_start_ != nullptr) {
+    heap_caps_free(const_cast<uint8_t *>(this->model_start_));
+    this->model_start_ = nullptr;
+  }
 }
 
 VADModel::VADModel(const uint8_t *model_start, uint8_t default_probability_cutoff, size_t sliding_window_size,

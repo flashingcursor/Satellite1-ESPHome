@@ -1,0 +1,79 @@
+esphome:
+  includes:
+    - common/custom_mww_helper.h
+
+text:
+  - platform: template
+    id: custom_mww_url
+    name: "Custom wake word URL"
+    icon: "mdi:microphone-plus"
+    entity_category: config
+    optimistic: true
+    restore_value: true
+    mode: text
+    initial_value: ""
+
+button:
+  - platform: template
+    name: "Install custom wake word"
+    icon: "mdi:download"
+    entity_category: config
+    on_press:
+      - script.execute: download_custom_wake_word
+
+  - platform: template
+    name: "Remove custom wake word"
+    icon: "mdi:delete"
+    entity_category: config
+    on_press:
+      - script.execute: remove_custom_wake_word
+
+text_sensor:
+  - platform: template
+    id: custom_mww_status
+    name: "Custom wake word status"
+    icon: "mdi:information"
+    entity_category: diagnostic
+    update_interval: never
+    lambda: |-
+      std::string name = custom_mww::get_installed_name();
+      if (name.empty()) {
+        return std::string("No custom model installed");
+      }
+      return std::string("Active: ") + name;
+
+script:
+  - id: download_custom_wake_word
+    mode: single
+    then:
+      - lambda: |-
+          std::string url = id(custom_mww_url).state;
+          if (url.empty()) {
+            id(custom_mww_status).publish_state("Error: no URL provided");
+            return;
+          }
+          id(custom_mww_status).publish_state("Downloading...");
+      - lambda: |-
+          std::string url = id(custom_mww_url).state;
+          uint8_t step = id(mww).get_features_step_size();
+          std::string result = custom_mww::install(id(http_req), url, step);
+          if (result.empty()) {
+            id(custom_mww_status).publish_state("Installed, rebooting...");
+            delay(1000);
+            App.safe_reboot();
+          } else {
+            id(custom_mww_status).publish_state(result);
+          }
+
+  - id: remove_custom_wake_word
+    mode: single
+    then:
+      - lambda: |-
+          std::string result = custom_mww::remove();
+          if (result.empty()) {
+            id(custom_mww_status).publish_state("Removed, rebooting...");
+            delay(1000);
+            App.safe_reboot();
+          } else {
+            id(custom_mww_status).publish_state(result);
+          }

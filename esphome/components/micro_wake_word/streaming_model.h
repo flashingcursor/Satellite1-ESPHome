@@ -90,7 +90,7 @@ class StreamingModel {
   tflite::MicroAllocator *ma_{nullptr};
 };
 
-class WakeWordModel final : public StreamingModel {
+class WakeWordModel : public StreamingModel {
  public:
   /// @brief Constructs a wake word model object
   /// @param id (std::string) identifier for this model
@@ -135,6 +135,23 @@ class WakeWordModel final : public StreamingModel {
   bool internal_only_;
 
   ESPPreferenceObject pref_;
+};
+
+class UserWakeWordModel final : public WakeWordModel {
+ public:
+  /// @brief Constructs a user-provided wake word model that owns its model data buffer
+  /// @param model_data (uint8_t *) PSRAM-allocated buffer containing the TFLite model (takes ownership)
+  /// @param model_size (size_t) Size of the model data in bytes
+  /// @param probability_cutoff (uint8_t) Quantized probability cutoff (0-255)
+  /// @param sliding_window_size (size_t) Sliding window size for averaging probabilities
+  /// @param wake_word (const std::string &) Friendly name of the wake word
+  /// @param tensor_arena_size (size_t) Size in bytes for the tensor arena
+  UserWakeWordModel(uint8_t *model_data, size_t model_size, uint8_t probability_cutoff, size_t sliding_window_size,
+                    const std::string &wake_word, size_t tensor_arena_size);
+  ~UserWakeWordModel();
+
+ protected:
+  size_t owned_model_data_size_;
 };
 
 class VADModel final : public StreamingModel {

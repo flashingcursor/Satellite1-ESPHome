@@ -9,6 +9,9 @@
 
 #include "esphome/components/audio/audio_transfer_buffer.h"
 
+#include <esp_heap_caps.h>
+#include <nvs_flash.h>
+
 #ifdef USE_OTA
 #include "esphome/components/ota/ota_backend.h"
 #endif
@@ -72,6 +75,66 @@ void MicroWakeWord::dump_config() {
 #endif
 }
 
+void MicroWakeWord::load_user_model_from_nvs_() {
+  nvs_handle_t handle;
+  if (nvs_open("mww_user", NVS_READONLY, &handle) != ESP_OK) {
+    return;  // No user model stored
+  }
+
+  uint32_t model_size = 0;
+  if (nvs_get_u32(handle, "model_size", &model_size) != ESP_OK || model_size == 0) {
+    nvs_close(handle);
+    return;
+  }
+
+  // Validate feature_step_size matches the built-in models
+  uint8_t step = 0;
+  if (nvs_get_u8(handle, "step", &step) != ESP_OK) {
+    ESP_LOGW(TAG, "User model missing step size, skipping");
+    nvs_close(handle);
+    return;
+  }
+  if (step != this->features_step_size_) {
+    ESP_LOGW(TAG, "User model step size %u != firmware step size %u, skipping", step, this->features_step_size_);
+    nvs_close(handle);
+    return;
+  }
+
+  // Allocate PSRAM for the model data
+  uint8_t *model_data = (uint8_t *) heap_caps_malloc(model_size, MALLOC_CAP_SPIRAM);
+  if (model_data == nullptr) {
+    ESP_LOGE(TAG, "Failed to allocate %u bytes in PSRAM for user model", model_size);
+    nvs_close(handle);
+    return;
+  }
+
+  size_t blob_size = model_size;
+  if (nvs_get_blob(handle, "model_data", model_data, &blob_size) != ESP_OK || blob_size != model_size) {
+    ESP_LOGE(TAG, "Failed to read user model data from NVS");
+    heap_caps_free(model_data);
+    nvs_close(handle);
+    return;
+  }
+
+  // Read model metadata
+  uint8_t cutoff = 200;
+  nvs_get_u8(handle, "cutoff", &cutoff);
+  uint16_t window = 5;
+  nvs_get_u16(handle, "window", &window);
+  uint32_t arena = 45672;
+  nvs_get_u32(handle, "arena", &arena);
+
+  char name[64] = "custom";
+  size_t name_len = sizeof(name);
+  nvs_get_str(handle, "name", name, &name_len);
+
+  nvs_close(handle);
+
+  auto *model = new UserWakeWordModel(model_data, model_size, cutoff, window, std::string(name), arena);
+  this->add_wake_word_model(model);
+  ESP_LOGI(TAG, "Loaded user wake word model '%s' from NVS (%u bytes)", name, model_size);
+}
+
 void MicroWakeWord::setup() {
   this->frontend_config_.window.size_ms = FEATURE_DURATION_MS;
   this->frontend_config_.window.step_size_ms = this->features_step_size_;
@@ -118,6 +181,8 @@ void MicroWakeWord::setup() {
       temp_ring_buffer->write((void *) data.data(), data.size());
     }
   });
+
+  this->load_user_model_from_nvs_();
 
 #ifdef USE_OTA_STATE_LISTENER
   ota::get_global_ota_callback()->add_global_state_listener(this);

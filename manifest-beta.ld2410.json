@@ -1,20 +1,20 @@
 {
   "name": "flashingcursor.Satellite1",
-  "version": "v0.1.5-beta.7",
+  "version": "v0.1.5-beta.8",
   "home_assistant_domain": "esphome",
   "new_install_prompt_erase": false,
   "builds": [
     {
       "chipFamily": "ESP32-S3",
       "ota": {
-        "path": "https://github.com/flashingcursor/Satellite1-ESPHome/releases/download/v0.1.5-beta.7/satellite1.ld2410.ota.bin",
-        "md5": "838b4ccd35220e3f8265fb5c95add9c4",
-        "summary": "v0.1.5-beta.7",
-        "release_url": "https://github.com/flashingcursor/Satellite1-ESPHome/releases/tag/v0.1.5-beta.7"
+        "path": "https://github.com/flashingcursor/Satellite1-ESPHome/releases/download/v0.1.5-beta.8/satellite1.ld2410.ota.bin",
+        "md5": "4819f04c728801e20341d95751c9f0ab",
+        "summary": "v0.1.5-beta.8",
+        "release_url": "https://github.com/flashingcursor/Satellite1-ESPHome/releases/tag/v0.1.5-beta.8"
       },
       "parts": [
         {
-          "path": "https://github.com/flashingcursor/Satellite1-ESPHome/releases/download/v0.1.5-beta.7/satellite1.ld2410.factory.bin",
+          "path": "https://github.com/flashingcursor/Satellite1-ESPHome/releases/download/v0.1.5-beta.8/satellite1.ld2410.factory.bin",
           "offset": 0
         }
       ]

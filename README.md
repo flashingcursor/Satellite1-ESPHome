@@ -23,6 +23,25 @@ All features are controllable via Home Assistant config entities:
 | Announce connections | Switch | On | Play sounds on connect/disconnect |
 | Announcement style | Select | Voice | Choose between voice clips and tones |
 
+### Voice Interaction
+
+- **Wake-word barge-in** -- Say the wake word during a TTS response to interrupt it and immediately start a new voice session. No more waiting for the device to finish talking before you can ask a follow-up.
+
+### Custom Wake Words (No Recompile)
+
+Install custom [microWakeWord](https://github.com/kahrendt/microWakeWord) models at runtime without recompiling firmware. Paste a manifest URL into Home Assistant, press install, and the model is downloaded to flash and activated after a reboot.
+
+| Entity | Type | Description |
+|--------|------|-------------|
+| Custom wake word URL | Text | Manifest URL for the custom model |
+| Custom wake word install | Button | Download and install the model |
+| Custom wake word remove | Button | Remove the installed model |
+| Custom wake word status | Sensor | Shows the active custom model name |
+
+### Automatic OTA Updates
+
+The device checks for firmware updates from GitHub Releases automatically. A beta firmware toggle is available for early access to new features.
+
 ### Reliability Hardening
 
 Several rounds of bug fixes across the component codebase, covering critical audio pipeline issues, power delivery negotiation, network resilience, and general correctness.
